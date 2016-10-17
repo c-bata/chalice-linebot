@@ -10,9 +10,38 @@ LINE bot with AWS Lambda + API Gateway.
 - chalice
 - line-bot-sdk
 
+## How to run
 
-## Deploy
+### Setup
+
+Create `.chalice/config.json` :
+
+```console
+$ cat .chalice/config.json
+{
+  "app_name": "linebot", 
+  "stage": "dev"
+}
+```
+
+Set `CHANNEL_ACCESS_SECRET` and `CHANNEL_ACCESS_TOKEN` :
+
+```console
+$ vim app.py  # and setting your channel secret and channel access token.
+```
+
+### Deploy to AWS Lambda and API Gateway
+
+Deploying by chalice cli:
 
 ```console
 $ chalice deploy
+```
+
+### Configuration on LINE DEVELOPERS
+
+Open your line bot setting's page and Set WebHook url.
+
+```
+https://hoge.execute-api.ap-northeast-1.amazonaws.com/dev/callback
 ```
