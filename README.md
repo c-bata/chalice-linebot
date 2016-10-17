@@ -4,6 +4,16 @@ LINE bot with AWS Lambda + API Gateway.
 
 ![Demo](./resources/example.png)
 
+## Functions
+
+| Command   | Image                                 |
+|-----------|---------------------------------------|
+| Weather   | ![weather](./resources/weather.png)   |
+| Greeting  | ![greeting](./resources/greeting.png) |
+| Shuffle   | ![shuffle](./resources/shuffle.png)   |
+| Choice    | ![choice](./resources/choice.png)     |
+| Echo      | ![echo](./resources/echo.png)         |
+
 ## Requirements
 
 - Python2.7
