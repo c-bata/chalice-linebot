@@ -1,10 +1,6 @@
 from chalice import Chalice
-from linebot import (
-    LineBotApi, WebhookHandler
-)
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage,
-)
+from linebot import LineBotApi, WebhookHandler
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
