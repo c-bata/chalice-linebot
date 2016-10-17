@@ -1,31 +1,39 @@
 from chalice import Chalice
+from linebot import (
+    LineBotApi, WebhookHandler
+)
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage,
+)
 
 app = Chalice(app_name='linebot')
+line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
+handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
+
+
+@app.route("/callback", methods=['POST'])
+def callback():
+    request = app.current_request
+    # get X-Line-Signature header value
+    signature = request.headers['X-Line-Signature']
+    print('signature: ', signature)
+
+    # get request body as text
+    body = request.raw_body.decode('utf-8')
+    print('body: ', body)
+    handler.handle(body, signature)
+
+    return 'OK'
+
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    msg = event.message.text
+    if msg.startswith('@bot'):
+        msg = msg[4:]
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
 
 
 @app.route('/')
 def index():
-    return {'hello': 'world'}
-
-
-# The view function above will return {"hello": "world"}
-# whenver you make an HTTP GET request to '/'.
-#
-# Here are a few more examples:
-#
-# @app.route('/hello/{name}')
-# def hello_name(name):
-#    # '/hello/james' -> {"hello": "james"}
-#    return {'hello': name}
-#
-# @app.route('/users', methods=['POST'])
-# def create_user():
-#     # This is the JSON body the user sent in their POST request.
-#     user_as_json = app.json_body
-#     # Suppose we had some 'db' object that we used to
-#     # read/write from our database.
-#     # user_id = db.create_user(user_as_json)
-#     return {'user_id': user_id}
-#
-# See the README documentation for more examples.
-#
+    return 'Hello'
