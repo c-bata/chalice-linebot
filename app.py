@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import re
-from random import choice
+import random
 
 from chalice import Chalice
 from linebot import LineBotApi, WebhookHandler
@@ -29,7 +29,7 @@ def callback():
     return 'OK'
 
 
-def greet(msg):
+def _greet(msg):
     greetings = [
         ('眠た?い|ねむた?い|寝る|寝ます', ['おやすみー', 'おやすみなさい']),
         ('いってきま|行ってきま', ['いってらっしゃい', 'いってら']),
@@ -40,29 +40,42 @@ def greet(msg):
     for pattern, replies in greetings:
         p = re.compile(pattern)
         if p.match(msg):
-            return choice(replies)
+            return random.choice(replies)
 
 
-def _handle_message(message):
-    # greeting
-    r = greet(message)
-    if r:
-        return r
+def _choice(msg):
+    prefix = 'choice '
+    if msg.startswith(prefix):
+        items = msg[len(prefix):].split()
+        return random.choice(items)
 
-    # echo
-    prefix = '@bot'
-    if message.startswith(prefix):
-        return message[len(prefix)+1:]
+
+def _shuffle(msg):
+    prefix = 'shuffle '
+    if msg.startswith(prefix):
+        items = msg[len(prefix):].split()
+        random.shuffle(items)
+        return '\n'.join(items)
+
+
+def _echo(msg):
+    prefix = '@bot '
+    if msg.startswith(prefix):
+        return msg[len(prefix):]
+
+
+plugins = [_greet, _echo, _choice, _shuffle]
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    reply = _handle_message(event.message.text)
-    if reply:
-        line_bot_api.reply_message(event.reply_token,
-                                   messages=TextSendMessage(text=reply))
+    for plugin in plugins:
+        reply = plugin(event.message.text)
+        if reply:
+            line_bot_api.reply_message(event.reply_token,
+                                       messages=TextSendMessage(text=reply))
 
 
 @app.route('/')
 def index():
-    return 'Hello'
+    return 'pong'
