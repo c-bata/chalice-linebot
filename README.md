@@ -2,8 +2,6 @@
 
 LINE bot with AWS Lambda + API Gateway.
 
-![Demo](./resources/example.png)
-
 ## Functions
 
 | Command   | Image                                 |
@@ -72,3 +70,9 @@ $ pip install -r requirements.txt -r requirements-dev.txt
 ```
 $ python -m unittest tests
 ```
+
+![Demo](./resources/example.png)
+
+### LICENSE
+
+MIT. See [LICENSE](./LICENSE)
