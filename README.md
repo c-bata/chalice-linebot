@@ -1,4 +1,4 @@
-# linebot-chalice-sample
+# chalice-linebot
 
 LINE bot with AWS Lambda + API Gateway.
 
