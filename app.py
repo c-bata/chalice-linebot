@@ -8,6 +8,7 @@ import random
 from chalice import Chalice
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+import requests
 
 app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
@@ -64,7 +65,38 @@ def _echo(msg):
         return msg[len(prefix):]
 
 
-plugins = [_greet, _echo, _choice, _shuffle]
+def _get_forecast_text(forecast):
+    """
+    天気予報の情報をテキストに変換する
+    """
+    date = forecast['dateLabel']
+    telop = forecast['telop']
+    temp = forecast['temperature']
+
+    text = '{} は {}'.format(date, telop)
+    if temp['min']:
+        text += ' 最低気温{}℃'.format(temp['min']['celsius'])
+    if temp['max']:
+        text += ' 最高気温{}℃'.format(temp['max']['celsius'])
+
+    return text
+
+
+def _weather(msg):
+    if not msg.startswith('weather'):
+        return
+
+    weather_url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city={}'
+    city_code = 280010  # 神戸
+    data = requests.get(weather_url.format(city_code)).json()
+
+    link = data['link']
+    text = _get_forecast_text(data['forecasts'][0]) + '\n'
+    text += _get_forecast_text(data['forecasts'][1])
+    return text
+
+
+plugins = [_greet, _echo, _choice, _shuffle, _weather]
 
 
 @handler.add(MessageEvent, message=TextMessage)
