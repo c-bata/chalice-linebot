@@ -45,3 +45,20 @@ Open your line bot setting's page and Set WebHook url.
 ```
 https://hoge.execute-api.ap-northeast-1.amazonaws.com/dev/callback
 ```
+
+
+## Development
+
+### Setup environment
+
+```
+$ virtualenv -p python2.7 venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt -r requirements-dev.txt
+```
+
+### Running tests
+
+```
+$ python -m unittest tests
+```
