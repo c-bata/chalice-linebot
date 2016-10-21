@@ -7,12 +7,22 @@ import random
 
 from chalice import Chalice
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import CarouselColumn
+from linebot.models import CarouselTemplate
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage
 import requests
+from linebot.models import MessageTemplateAction
+from linebot.models import PostbackTemplateAction
+from linebot.models import URITemplateAction
 
 app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
 handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
+
+
+@app.route('/')
+def index():
+    return 'pong'
 
 
 @app.route("/callback", methods=['POST'])
@@ -39,30 +49,27 @@ def _greet(msg):
         ('疲れた|つかれた', ['おつかれー', 'おつかれ！', 'お疲れ様！']),
     ]
     for pattern, replies in greetings:
-        p = re.compile(pattern)
-        if p.match(msg):
-            return random.choice(replies)
+        if re.match(pattern, msg):
+            return TextSendMessage(text=random.choice(replies))
 
 
 def _choice(msg):
-    prefix = 'choice '
-    if msg.startswith(prefix):
-        items = msg[len(prefix):].split()
-        return random.choice(items)
+    if re.match('^[cC]hoice.*', msg):
+        items = msg[len('choice '):].split()
+        return TextSendMessage(random.choice(items))
 
 
 def _shuffle(msg):
-    prefix = 'shuffle '
-    if msg.startswith(prefix):
-        items = msg[len(prefix):].split()
+    if re.match('^[sS]huffle.*', msg):
+        items = msg[len('shuffle '):].split()
         random.shuffle(items)
-        return '\n'.join(items)
+        return TextSendMessage('\n'.join(items))
 
 
 def _echo(msg):
     prefix = '@bot '
     if msg.startswith(prefix):
-        return msg[len(prefix):]
+        return TextSendMessage(msg[len(prefix):])
 
 
 def _get_forecast_text(forecast):
@@ -78,7 +85,6 @@ def _get_forecast_text(forecast):
         text += ' 最低気温{}℃'.format(temp['min']['celsius'])
     if temp['max']:
         text += ' 最高気温{}℃'.format(temp['max']['celsius'])
-
     return text
 
 
@@ -90,24 +96,70 @@ def _weather(msg):
     city_code = 280010  # 神戸
     data = requests.get(weather_url.format(city_code)).json()
 
-    link = data['link']
-    text = _get_forecast_text(data['forecasts'][0]) + '\n'
+    text = '神戸の天気\n'
+    text += _get_forecast_text(data['forecasts'][0]) + '\n'
     text += _get_forecast_text(data['forecasts'][1])
-    return text
+    return TextSendMessage(text)
 
 
-plugins = [_greet, _echo, _choice, _shuffle, _weather]
+def _today_news(msg):
+    if not msg.startswith('news'):
+        return
+
+    carousel_template_message = TemplateSendMessage(
+        alt_text="Today's news. now loading...",
+        template=CarouselTemplate(columns=[
+            CarouselColumn(
+                thumbnail_image_url='https://s3-us-west-2.amazonaws.com/lineapitest/hamburger_240.jpeg',
+                title='this is menu1',
+                text='description1',
+                actions=[
+                    PostbackTemplateAction(
+                        label='postback1',
+                        text='postback text1',
+                        data='action=buy&itemid=1'
+                    ),
+                    MessageTemplateAction(
+                        label='message1',
+                        text='message text1'
+                    ),
+                    URITemplateAction(
+                        label='uri1',
+                        uri='http://example.com/1'
+                    )
+                ]
+            ),
+            CarouselColumn(
+                thumbnail_image_url='https://s3-us-west-2.amazonaws.com/lineapitest/hamburger_240.jpeg',
+                title='this is menu2',
+                text='description2',
+                actions=[
+                    PostbackTemplateAction(
+                        label='postback2',
+                        text='postback text2',
+                        data='action=buy&itemid=2'
+                    ),
+                    MessageTemplateAction(
+                        label='message2',
+                        text='message text2'
+                    ),
+                    URITemplateAction(
+                        label='uri2',
+                        uri='http://example.com/2'
+                    )
+                ]
+            )
+        ])
+    )
+    return carousel_template_message
+
+
+plugins = [_greet, _echo, _choice, _shuffle, _weather, _today_news]
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     for plugin in plugins:
-        reply = plugin(event.message.text)
-        if reply:
-            line_bot_api.reply_message(event.reply_token,
-                                       messages=TextSendMessage(text=reply))
-
-
-@app.route('/')
-def index():
-    return 'pong'
+        send_message = plugin(event.message.text)
+        if send_message:
+            line_bot_api.reply_message(event.reply_token, messages=send_message)
