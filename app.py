@@ -6,6 +6,7 @@ import re
 import random
 
 from chalice import Chalice
+import feedparser
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage,
@@ -100,26 +101,30 @@ def _weather(msg):
     return TextSendMessage(text)
 
 
+def _fetch_yahoo_news_entry():
+    url = 'http://rss.dailynews.yahoo.co.jp/fc/rss.xml'
+    data = feedparser.parse(url)
+    return data['entries']
+
+
 def _today_news(msg):
     if not msg.startswith('news'):
         return
 
+    columns = []
+    for entry in _fetch_yahoo_news_entry()[:3]:
+        print(entry['title'])
+        print(entry['link'])
+        columns.append(CarouselColumn(
+            thumbnail_image_url='https:/3-us-west-2.amazonaws.com/lineapitest/hamburger_240.jpeg',
+            title=entry['title'],
+            text='description',
+            actions=[URITemplateAction(label='詳細を見る', uri=entry['link'])]
+        ))
+
     carousel_template_message = TemplateSendMessage(
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
-        template=CarouselTemplate(columns=[
-            CarouselColumn(
-                thumbnail_image_url='https://s3-us-west-2.amazonaws.com/lineapitest/hamburger_240.jpeg',
-                title='this is menu1',
-                text='description1',
-                actions=[URITemplateAction(label='詳細を見る', uri='http://example.com/1')]
-            ),
-            CarouselColumn(
-                thumbnail_image_url='https://s3-us-west-2.amazonaws.com/lineapitest/hamburger_240.jpeg',
-                title='this is menu2',
-                text='description2',
-                actions=[URITemplateAction(label='詳細を見る', uri='http://example.com/2')]
-            )
-        ])
+        template=CarouselTemplate(columns=columns)
     )
     return carousel_template_message
 
