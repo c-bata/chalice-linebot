@@ -104,23 +104,22 @@ def _weather(msg):
 def _fetch_yahoo_news_entry():
     url = 'http://rss.dailynews.yahoo.co.jp/fc/rss.xml'
     data = feedparser.parse(url)
-    return data['entries']
+    # Carousel template is accepted until 5 columns.
+    # See https://devdocs.line.me/ja/#template-message
+    return data['entries'][:5]
 
 
 def _today_news(msg):
     if not msg.startswith('news'):
         return
 
-    columns = []
-    for entry in _fetch_yahoo_news_entry()[:3]:
-        print(entry['title'])
-        print(entry['link'])
-        columns.append(CarouselColumn(
-            thumbnail_image_url='https:/3-us-west-2.amazonaws.com/lineapitest/hamburger_240.jpeg',
-            title=entry['title'],
-            text='description',
-            actions=[URITemplateAction(label='詳細を見る', uri=entry['link'])]
-        ))
+    columns = [
+        CarouselColumn(
+            text=entry['title'],
+            actions=[URITemplateAction(label='Open in Browser', uri=entry['link'])]
+        )
+        for entry in _fetch_yahoo_news_entry()
+    ]
 
     carousel_template_message = TemplateSendMessage(
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
