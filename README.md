@@ -1,6 +1,6 @@
 ![title](./resources/title.png)
 
-LINE bot with AWS Lambda + API Gateway.
+LINE BOT on AWS Lambda + API Gateway using Chalice.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ LINE bot with AWS Lambda + API Gateway.
 
 ## How to run
 
-### Setup
+#### Setup
 
 Create `.chalice/config.json` :
 
@@ -40,7 +40,7 @@ Set `CHANNEL_ACCESS_SECRET` and `CHANNEL_ACCESS_TOKEN` :
 $ vim app.py  # and setting your channel secret and channel access token.
 ```
 
-### Deploy to AWS Lambda and API Gateway
+#### Deploy to AWS Lambda and API Gateway
 
 Deploying by chalice cli:
 
@@ -48,7 +48,7 @@ Deploying by chalice cli:
 $ chalice deploy
 ```
 
-### Configuration on LINE DEVELOPERS
+#### Configuration on LINE DEVELOPERS
 
 Open your line bot setting's page and Set WebHook url.
 
@@ -58,7 +58,7 @@ Success! :tada:
 
 ## Development
 
-### Setup environment
+#### Setup environment
 
 ```console
 $ virtualenv -p python2.7 venv
@@ -66,13 +66,13 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt -r requirements-dev.txt -c constraints.txt
 ```
 
-### Running tests
+#### Running tests
 
 ```console
 $ python -m unittest tests
 ```
 
-### LICENSE
+## LICENSE
 
 MIT. See [LICENSE](./LICENSE)
 
