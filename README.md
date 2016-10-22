@@ -7,6 +7,7 @@ LINE bot with AWS Lambda + API Gateway.
 | Command   | Image                                 |
 |-----------|---------------------------------------|
 | Weather   | ![weather](./resources/weather.png)   |
+| News      | ![news](./resources/news.png)         |
 | Greeting  | ![greeting](./resources/greeting.png) |
 | Shuffle   | ![shuffle](./resources/shuffle.png)   |
 | Choice    | ![choice](./resources/choice.png)     |

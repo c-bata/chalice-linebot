@@ -6,10 +6,11 @@ colorama==0.3.7
 configobj==5.0.6
 docutils==0.12
 enum34==1.1.6
+feedparser==5.2.1
 future==0.15.2
 futures==3.0.5
 jmespath==0.9.0
-line-bot-sdk==1.0.0
+line-bot-sdk==1.0.2
 prompt-toolkit==1.0.8
 pyasn1==0.1.9
 Pygments==2.1.3
