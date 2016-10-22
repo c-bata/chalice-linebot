@@ -1,6 +1,13 @@
-# chalice-linebot
+![title](./resources/title.png)
 
 LINE bot with AWS Lambda + API Gateway.
+
+## Requirements
+
+- Python2.7
+- chalice
+- line-bot-sdk
+- feedparser
 
 ## Functions
 
@@ -12,12 +19,6 @@ LINE bot with AWS Lambda + API Gateway.
 | Shuffle   | ![shuffle](./resources/shuffle.png)   |
 | Choice    | ![choice](./resources/choice.png)     |
 | Echo      | ![echo](./resources/echo.png)         |
-
-## Requirements
-
-- Python2.7
-- chalice
-- line-bot-sdk
 
 ## How to run
 
@@ -51,13 +52,9 @@ $ chalice deploy
 
 Open your line bot setting's page and Set WebHook url.
 
-```
-https://hoge.execute-api.ap-northeast-1.amazonaws.com/dev/callback
-```
+`https://hoge.execute-api.ap-northeast-1.amazonaws.com/dev/callback`
 
 Success! :tada:
-
-![Demo](./resources/example.png)
 
 ## Development
 
@@ -78,3 +75,4 @@ $ python -m unittest tests
 ### LICENSE
 
 MIT. See [LICENSE](./LICENSE)
+
