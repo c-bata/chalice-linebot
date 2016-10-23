@@ -5,6 +5,7 @@ from __future__ import print_function
 import re
 import random
 
+from bs4 import BeautifulSoup
 from chalice import Chalice
 import feedparser
 from linebot import LineBotApi, WebhookHandler
@@ -101,25 +102,45 @@ def _weather(msg):
     return TextSendMessage(text)
 
 
-def _fetch_yahoo_news_entry():
-    url = 'http://rss.dailynews.yahoo.co.jp/fc/rss.xml'
-    data = feedparser.parse(url)
+def _fetch_news():
+    # RSS Feed of yahoo news doesn't contain thumbnail image.
+    url = 'https://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&topic=po&output=rss'
+    parsed = feedparser.parse(url)
     # Carousel template is accepted until 5 columns.
     # See https://devdocs.line.me/ja/#template-message
-    return data['entries'][:5]
+    return parsed.entries[:5]
+
+
+def _get_carousel_column_from_google_news_entry(entry):
+    summary_soup = BeautifulSoup(entry.summary, "html.parser")
+    # summary has img tag which has no src attribute like:
+    # <img alt="" height="1" width="1"/>
+    images = [x for x in summary_soup.find_all('img') if x.has_attr('src')]
+    if len(images) == 0:
+        return
+    thumbnail_url = images[0]['src']
+
+    # carousel column text is accepted until 60 characters when set the thumbnail image.
+    carousel_text = summary_soup.find_all('font')[5].contents[0]
+    carousel_text = carousel_text[:57] + '...' if len(carousel_text) > 60 else carousel_text
+
+    # carousel column title is accepted until 40 characters.
+    title = entry.title[:37] + '...' if len(entry.title) > 40 else entry.title
+
+    return CarouselColumn(
+        thumbnail_image_url=thumbnail_url,
+        title=title,
+        text=carousel_text,
+        actions=[URITemplateAction(label='Open in Browser', uri=entry.link)],
+    )
 
 
 def _today_news(msg):
     if not msg.startswith('news'):
         return
 
-    columns = [
-        CarouselColumn(
-            text=entry['title'],
-            actions=[URITemplateAction(label='Open in Browser', uri=entry['link'])]
-        )
-        for entry in _fetch_yahoo_news_entry()
-    ]
+    columns = [_get_carousel_column_from_google_news_entry(entry) for entry in _fetch_news()]
+    columns = [c for c in columns if c is not None]
 
     carousel_template_message = TemplateSendMessage(
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
