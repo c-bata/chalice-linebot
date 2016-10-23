@@ -115,13 +115,22 @@ def _get_carousel_column_from_google_news_entry(entry):
     summary_soup = BeautifulSoup(entry.summary, "html.parser")
     # summary has img tag which has no src attribute like:
     # <img alt="" height="1" width="1"/>
-    thumbnail_url = [x for x in summary_soup.find_all('img') if x.has_attr('src')][0]['src']
-    description = summary_soup.find_all('font')[5].contents[0]
+    images = [x for x in summary_soup.find_all('img') if x.has_attr('src')]
+    if len(images) == 0:
+        return
+    thumbnail_url = images[0]['src']
+
+    # carousel column text is accepted until 60 characters when set the thumbnail image.
+    carousel_text = summary_soup.find_all('font')[5].contents[0]
+    carousel_text = carousel_text[:57] + '...' if len(carousel_text) > 60 else carousel_text
+
+    # carousel column title is accepted until 40 characters.
+    title = entry.title[:37] + '...' if len(entry.title) > 40 else entry.title
 
     return CarouselColumn(
         thumbnail_image_url=thumbnail_url,
-        title=entry.title,
-        text=description,
+        title=title,
+        text=carousel_text,
         actions=[URITemplateAction(label='Open in Browser', uri=entry.link)],
     )
 
@@ -130,11 +139,12 @@ def _today_news(msg):
     if not msg.startswith('news'):
         return
 
+    columns = [_get_carousel_column_from_google_news_entry(entry) for entry in _fetch_news()]
+    columns = [c for c in columns if c is not None]
+
     carousel_template_message = TemplateSendMessage(
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
-        template=CarouselTemplate(columns=[
-            _get_carousel_column_from_google_news_entry(entry) for entry in _fetch_news()
-        ])
+        template=CarouselTemplate(columns=columns)
     )
     return carousel_template_message
 
