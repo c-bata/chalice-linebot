@@ -1,2 +1,4 @@
 awscli
 saws
+ipython
+
