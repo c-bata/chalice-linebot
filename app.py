@@ -106,9 +106,7 @@ def _fetch_news():
     # RSS Feed of yahoo news doesn't contain thumbnail image.
     url = 'https://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&topic=po&output=rss'
     parsed = feedparser.parse(url)
-    # Carousel template is accepted until 5 columns.
-    # See https://devdocs.line.me/ja/#template-message
-    return parsed.entries[:5]
+    return parsed.entries
 
 
 def _get_carousel_column_from_google_news_entry(entry):
@@ -140,7 +138,9 @@ def _today_news(msg):
         return
 
     columns = [_get_carousel_column_from_google_news_entry(entry) for entry in _fetch_news()]
-    columns = [c for c in columns if c is not None]
+    # Carousel template is accepted until 5 columns.
+    # See https://devdocs.line.me/ja/#template-message
+    columns = [c for c in columns if c is not None][:5]
 
     carousel_template_message = TemplateSendMessage(
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
