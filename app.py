@@ -5,6 +5,7 @@ from __future__ import print_function
 import re
 import random
 
+from bs4 import BeautifulSoup
 from chalice import Chalice
 import feedparser
 from linebot import LineBotApi, WebhookHandler
@@ -101,29 +102,39 @@ def _weather(msg):
     return TextSendMessage(text)
 
 
-def _fetch_yahoo_news_entry():
-    url = 'http://rss.dailynews.yahoo.co.jp/fc/rss.xml'
-    data = feedparser.parse(url)
+def _fetch_news():
+    # RSS Feed of yahoo news doesn't contain thumbnail image.
+    url = 'https://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&topic=po&output=rss'
+    parsed = feedparser.parse(url)
     # Carousel template is accepted until 5 columns.
     # See https://devdocs.line.me/ja/#template-message
-    return data['entries'][:5]
+    return parsed.entries[:5]
+
+
+def _get_carousel_column_from_google_news_entry(entry):
+    summary_soup = BeautifulSoup(entry.summary, "html.parser")
+    # summary has img tag which has no src attribute like:
+    # <img alt="" height="1" width="1"/>
+    thumbnail_url = [x for x in summary_soup.find_all('img') if x.has_attr('src')][0]['src']
+    description = summary_soup.find_all('font')[5].contents[0]
+
+    return CarouselColumn(
+        thumbnail_image_url=thumbnail_url,
+        title=entry.title,
+        text=description,
+        actions=[URITemplateAction(label='Open in Browser', uri=entry.link)],
+    )
 
 
 def _today_news(msg):
     if not msg.startswith('news'):
         return
 
-    columns = [
-        CarouselColumn(
-            text=entry['title'],
-            actions=[URITemplateAction(label='Open in Browser', uri=entry['link'])]
-        )
-        for entry in _fetch_yahoo_news_entry()
-    ]
-
     carousel_template_message = TemplateSendMessage(
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
-        template=CarouselTemplate(columns=columns)
+        template=CarouselTemplate(columns=[
+            _get_carousel_column_from_google_news_entry(entry) for entry in _fetch_news()
+        ])
     )
     return carousel_template_message
 
