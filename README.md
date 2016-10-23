@@ -2,23 +2,41 @@
 
 LINE BOT on AWS Lambda + API Gateway using Chalice.
 
-## Requirements
-
-- Python2.7
-- chalice
-- line-bot-sdk
-- feedparser
-
 ## Functions
 
 | Command   | Image                                 |
 |-----------|---------------------------------------|
+| Greeting  | ![greeting](./resources/greeting.png) |
+| Choice    | ![choice](./resources/choice.png)     |
+| Shuffle   | ![shuffle](./resources/shuffle.png)   |
 | Weather   | ![weather](./resources/weather.png)   |
 | News      | ![news](./resources/news.png)         |
-| Greeting  | ![greeting](./resources/greeting.png) |
-| Shuffle   | ![shuffle](./resources/shuffle.png)   |
-| Choice    | ![choice](./resources/choice.png)     |
 | Echo      | ![echo](./resources/echo.png)         |
+
+## Development
+
+#### Requirements
+
+Because of AWS Lambda's restrictions, Supported python version is 2.7 only.
+
+- beautifulsoup4
+- chalice
+- line-bot-sdk
+- feedparser
+
+#### Setup environment
+
+```console
+$ virtualenv -p python2.7 venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt -r requirements-dev.txt -c constraints.txt
+```
+
+#### Running tests
+
+```console
+$ python -m unittest tests
+```
 
 ## How to run
 
@@ -55,22 +73,6 @@ Open your line bot setting's page and Set WebHook url.
 `https://hoge.execute-api.ap-northeast-1.amazonaws.com/dev/callback`
 
 Success! :tada:
-
-## Development
-
-#### Setup environment
-
-```console
-$ virtualenv -p python2.7 venv
-$ source venv/bin/activate
-$ pip install -r requirements.txt -r requirements-dev.txt -c constraints.txt
-```
-
-#### Running tests
-
-```console
-$ python -m unittest tests
-```
 
 ## LICENSE
 
