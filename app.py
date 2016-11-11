@@ -228,7 +228,7 @@ def today_news(event):
 # ====================================
 def _leave(event):
     confirm_template_message = TemplateSendMessage(
-        alt_text='確認画面(このメッセージが表示されている端末ではこの機能は無効です)',
+        alt_text='Are you sure?',
         template=ConfirmTemplate(
             text='Are you sure?',
             actions=[
