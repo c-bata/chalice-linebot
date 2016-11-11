@@ -22,6 +22,11 @@ handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
 
 HELP_TEXT = """\
 Commands:
+- @bot
+  ex) @bot ping -> pong
+      @bot bye -> leaveing group
+      @bot Hey -> Hey {YOUR NAME}
+
 - greeting
   ex) おはよう -> おはよー
       おやすみ -> おやすみー
@@ -206,27 +211,30 @@ def echo(event):
         return
     msg = msg[len(prefix):]
 
-    if re.match('出て行け|出てけ|kick', msg):
+    if msg.startswith('ping'):
+        line_bot_api.reply_message(event.reply_token,
+                                   messages=TextSendMessage('pong'))
+    elif re.match('出て行け|出てけ|[kK]ick|[Bb]ye', msg):
         if isinstance(event.source, SourceGroup):
-            line_bot_api.reply_message(
-                event.reply_token, messages=TextSendMessage('Leaving group'))
+            line_bot_api.reply_message(event.reply_token,
+                                       messages=TextSendMessage('Leaving group'))
             line_bot_api.leave_group(event.source.group_id)
         elif isinstance(event.source, SourceRoom):
-            line_bot_api.reply_message(
-                event.reply_token, messages=TextSendMessage('Leaving room'))
+            line_bot_api.reply_message(event.reply_token,
+                                       messages=TextSendMessage('Leaving room'))
             line_bot_api.leave_group(event.source.room_id)
         else:
-            line_bot_api.reply_message(
-                event.reply_token,
-                messages=TextSendMessage("Bot can't leave from 1:1 chat"))
-    elif re.match('Hey', msg):
+            line_bot_api.reply_message(event.reply_token,
+                                       messages=TextSendMessage("Bot can't leave from 1:1 chat"))
+    elif msg.startswith('Hey'):
         profile = line_bot_api.get_profile(event.source.user_id)
         msg = 'Hey {}!'.format(profile.display_name)
-        line_bot_api.reply_message(event.reply_token,
-                                   messages=TextSendMessage(msg))
+        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
     elif re.match('help|ヘルプ', msg):
-        line_bot_api.reply_message(event.reply_token,
-                                   messages=TextSendMessage(HELP_TEXT))
+        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(HELP_TEXT))
+    else:
+        msg = "Sorry, I don't understand your command :("
+        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
 
 
 # ====================================
