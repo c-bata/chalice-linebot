@@ -25,12 +25,19 @@ Commands:
 - greeting
   ex) おはよう -> おはよー
       おやすみ -> おやすみー
+
 - choice
   ex) choice A B -> B
+
 - shuffle
   ex) shuffle A B -> B A
+
+- おみくじ
+  ex) おみくじ -> 凶
+
 - weather
   ex) weather -> 今日の天気は...
+
 - news
   ex) news -> Display the list of news.
 """
@@ -56,35 +63,9 @@ def callback():
     return 'OK'
 
 
-def _greet(event):
-    msg = event.message.text
-    greetings = [
-        ('ぽやしみ|おやすみ|眠た?い|ねむた?い|寝る|寝ます', ['おやすみー', 'おやすみなさい']),
-        ('いってきま|行ってきま', ['いってらっしゃい', 'いってら']),
-        ('こんにち[はわ]', ['こんにちは', 'こんにちは、元気ですかー?']),
-        ('おはよう|お早う', ['おはよー', 'おはよう', 'おはようございます！']),
-        ('疲れた|つかれた', ['おつかれー', 'おつかれ！', 'お疲れ様！']),
-    ]
-    for pattern, replies in greetings:
-        if re.match(pattern, msg):
-            return TextSendMessage(text=random.choice(replies))
-
-
-def _choice(event):
-    msg = event.message.text
-    if re.match('^[cC]hoice.*', msg):
-        items = msg[len('choice '):].split()
-        return TextSendMessage(random.choice(items))
-
-
-def _shuffle(event):
-    msg = event.message.text
-    if re.match('^[sS]huffle.*', msg):
-        items = msg[len('shuffle '):].split()
-        random.shuffle(items)
-        return TextSendMessage('\n'.join(items))
-
-
+# ====================================
+# Weather
+# ====================================
 def _get_forecast_text(forecast):
     """
     天気予報の情報をテキストに変換する
@@ -101,7 +82,7 @@ def _get_forecast_text(forecast):
     return text
 
 
-def _weather(event):
+def weather(event):
     msg = event.message.text
     if not msg.startswith('weather'):
         return
@@ -113,18 +94,55 @@ def _weather(event):
     text = '神戸の天気\n'
     text += _get_forecast_text(data['forecasts'][0]) + '\n'
     text += _get_forecast_text(data['forecasts'][1])
-    return TextSendMessage(text)
+    line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(text))
 
 
-plugins = [_greet, _choice, _shuffle, _weather]
+# ====================================
+# Greeting
+# ====================================
+def greet(event):
+    msg = event.message.text
+    greetings = [
+        ('ぽやしみ|おやすみ|眠た?い|ねむた?い|寝る|寝ます', ['おやすみー', 'おやすみなさい']),
+        ('いってきま|行ってきま', ['いってらっしゃい', 'いってら']),
+        ('こんにち[はわ]', ['こんにちは', 'こんにちは、元気ですかー?']),
+        ('おはよう|お早う', ['おはよー', 'おはよう', 'おはようございます！']),
+        ('疲れた|つかれた', ['おつかれー', 'おつかれ！', 'お疲れ様！']),
+    ]
+    for pattern, replies in greetings:
+        if re.match(pattern, msg):
+            line_bot_api.reply_message(event.reply_token,
+                                       messages=TextSendMessage(random.choice(replies)))
+            return
 
 
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    for plugin in plugins:
-        send_message = plugin(event)
-        if send_message:
-            line_bot_api.reply_message(event.reply_token, messages=send_message)
+# ====================================
+# Choice, Shuffle, おみくじ
+# ====================================
+def choice(event):
+    msg = event.message.text
+    if not re.match('^[cC]hoice.*', msg):
+        return
+    items = msg[len('choice '):].split()
+    line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(random.choice(items)))
+
+
+def shuffle(event):
+    msg = event.message.text
+    if not re.match('^[sS]huffle.*', msg):
+        return
+    items = msg[len('shuffle '):].split()
+    random.shuffle(items)
+    line_bot_api.reply_message(event.reply_token, messages=TextSendMessage('\n'.join(items)))
+
+
+def omikuji(event):
+    msg = event.message.text
+    if not re.match('^おみくじ$', msg):
+        return
+    fortunes = ['大吉', '中吉', '吉', '末吉', '凶', '大凶']
+    line_bot_api.reply_message(event.reply_token,
+                               messages=TextSendMessage(random.choice(fortunes)))
 
 
 # ====================================
@@ -161,7 +179,6 @@ def _get_carousel_column_from_google_news_entry(entry):
     )
 
 
-@handler.add(MessageEvent, message=TextMessage)
 def today_news(event):
     msg = event.message.text
     if not msg.startswith('news'):
@@ -176,13 +193,12 @@ def today_news(event):
         alt_text="今日のニュース\nこのメッセージが見えている端末ではこの機能に対応していません。",
         template=CarouselTemplate(columns=columns)
     )
-    return carousel_template_message
+    line_bot_api.reply_message(event.reply_token, messages=carousel_template_message)
 
 
 # ====================================
 # Echo
 # ====================================
-@handler.add(MessageEvent, message=TextMessage)
 def echo(event):
     msg = event.message.text
     prefix = '@bot '
@@ -202,8 +218,7 @@ def echo(event):
         else:
             line_bot_api.reply_message(
                 event.reply_token,
-                messages=TextSendMessage("Bot can't leave from 1:1 chat")
-            )
+                messages=TextSendMessage("Bot can't leave from 1:1 chat"))
     elif re.match('Hey', msg):
         profile = line_bot_api.get_profile(event.source.user_id)
         msg = 'Hey {}!'.format(profile.display_name)
@@ -212,3 +227,15 @@ def echo(event):
     elif re.match('help|ヘルプ', msg):
         line_bot_api.reply_message(event.reply_token,
                                    messages=TextSendMessage(HELP_TEXT))
+
+
+# ====================================
+# Message Event, TextMessage
+# ====================================
+plugins = [greet, weather, choice, shuffle, omikuji, today_news, echo]
+
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    for plugin in plugins:
+        plugin(event)
