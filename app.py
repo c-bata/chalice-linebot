@@ -24,17 +24,17 @@ handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
 
 HELP_TEXT = """\
 Reply:
-  ping: @bot ping
-  bye: @bot bye
-  hey: @bot hey
+  @bot ping
+  @bot bye
+  @bot hey
 
 Commands:
-  greeting: おはよう, いってきます、おやすみ
-  choice: choice A B
-  shuffle: shuffle A B
-  omikuji: おみくじ or 今日の運勢
-  weather: weather or 天気
-  news| news or ニュース
+  おはよう, いってきます、など
+  choice A B
+  shuffle A B
+  おみくじ or 今日の運勢
+  weather or 天気
+  news or ニュース
 """
 
 
