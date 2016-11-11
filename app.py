@@ -12,12 +12,28 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage,
     CarouselColumn, CarouselTemplate, URITemplateAction,
+    SourceGroup, SourceRoom
 )
 import requests
 
 app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
 handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
+
+HELP_TEXT = """\
+Commands:
+- greeting
+  ex) おはよう -> おはよー
+      おやすみ -> おやすみー
+- choice
+  ex) choice A B -> B
+- shuffle
+  ex) shuffle A B -> B A
+- weather
+  ex) weather -> 今日の天気は...
+- news
+  ex) news -> Display the list of news.
+"""
 
 
 @app.route('/')
@@ -40,7 +56,8 @@ def callback():
     return 'OK'
 
 
-def _greet(msg):
+def _greet(event):
+    msg = event.message.text
     greetings = [
         ('ぽやしみ|おやすみ|眠た?い|ねむた?い|寝る|寝ます', ['おやすみー', 'おやすみなさい']),
         ('いってきま|行ってきま', ['いってらっしゃい', 'いってら']),
@@ -53,23 +70,19 @@ def _greet(msg):
             return TextSendMessage(text=random.choice(replies))
 
 
-def _choice(msg):
+def _choice(event):
+    msg = event.message.text
     if re.match('^[cC]hoice.*', msg):
         items = msg[len('choice '):].split()
         return TextSendMessage(random.choice(items))
 
 
-def _shuffle(msg):
+def _shuffle(event):
+    msg = event.message.text
     if re.match('^[sS]huffle.*', msg):
         items = msg[len('shuffle '):].split()
         random.shuffle(items)
         return TextSendMessage('\n'.join(items))
-
-
-def _echo(msg):
-    prefix = '@bot '
-    if msg.startswith(prefix):
-        return TextSendMessage(msg[len(prefix):])
 
 
 def _get_forecast_text(forecast):
@@ -88,7 +101,8 @@ def _get_forecast_text(forecast):
     return text
 
 
-def _weather(msg):
+def _weather(event):
+    msg = event.message.text
     if not msg.startswith('weather'):
         return
 
@@ -102,6 +116,20 @@ def _weather(msg):
     return TextSendMessage(text)
 
 
+plugins = [_greet, _choice, _shuffle, _weather]
+
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    for plugin in plugins:
+        send_message = plugin(event)
+        if send_message:
+            line_bot_api.reply_message(event.reply_token, messages=send_message)
+
+
+# ====================================
+# NEWS
+# ====================================
 def _fetch_news():
     # RSS Feed of yahoo news doesn't contain thumbnail image.
     url = 'https://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&topic=po&output=rss'
@@ -133,7 +161,9 @@ def _get_carousel_column_from_google_news_entry(entry):
     )
 
 
-def _today_news(msg):
+@handler.add(MessageEvent, message=TextMessage)
+def today_news(event):
+    msg = event.message.text
     if not msg.startswith('news'):
         return
 
@@ -149,12 +179,36 @@ def _today_news(msg):
     return carousel_template_message
 
 
-plugins = [_greet, _echo, _choice, _shuffle, _weather, _today_news]
-
-
+# ====================================
+# Echo
+# ====================================
 @handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    for plugin in plugins:
-        send_message = plugin(event.message.text)
-        if send_message:
-            line_bot_api.reply_message(event.reply_token, messages=send_message)
+def echo(event):
+    msg = event.message.text
+    prefix = '@bot '
+    if not msg.startswith(prefix):
+        return
+    msg = msg[len(prefix):]
+
+    if re.match('出て行け|出てけ|kick', msg):
+        if isinstance(event.source, SourceGroup):
+            line_bot_api.reply_message(
+                event.reply_token, messages=TextSendMessage('Leaving group'))
+            line_bot_api.leave_group(event.source.group_id)
+        elif isinstance(event.source, SourceRoom):
+            line_bot_api.reply_message(
+                event.reply_token, messages=TextSendMessage('Leaving room'))
+            line_bot_api.leave_group(event.source.room_id)
+        else:
+            line_bot_api.reply_message(
+                event.reply_token,
+                messages=TextSendMessage("Bot can't leave from 1:1 chat")
+            )
+    elif re.match('Hey', msg):
+        profile = line_bot_api.get_profile(event.source.user_id)
+        msg = 'Hey {}!'.format(profile.display_name)
+        line_bot_api.reply_message(event.reply_token,
+                                   messages=TextSendMessage(msg))
+    elif re.match('help|ヘルプ', msg):
+        line_bot_api.reply_message(event.reply_token,
+                                   messages=TextSendMessage(HELP_TEXT))
