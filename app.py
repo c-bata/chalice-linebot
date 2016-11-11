@@ -10,9 +10,11 @@ from chalice import Chalice
 import feedparser
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, TemplateSendMessage,
-    CarouselColumn, CarouselTemplate, URITemplateAction,
-    SourceGroup, SourceRoom
+    MessageEvent, JoinEvent, PostbackEvent,
+    TextMessage, TextSendMessage, TemplateSendMessage,
+    CarouselColumn, CarouselTemplate, ConfirmTemplate,
+    URITemplateAction, PostbackTemplateAction, MessageTemplateAction,
+    SourceGroup, SourceRoom,
 )
 import requests
 
@@ -66,6 +68,38 @@ def callback():
     handler.handle(body, signature)
 
     return 'OK'
+
+
+# ====================================
+# Join
+# ====================================
+@handler.add(JoinEvent)
+def handle_join(event):
+    msg = 'Joined this {}!\nみなさん、よろしくお願いします :)'.format(event.source.type)
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=msg))
+
+
+# ====================================
+# Postback
+# ====================================
+def postback_leave(event):
+    if isinstance(event.source, SourceGroup):
+        line_bot_api.reply_message(event.reply_token,
+                                   messages=TextSendMessage('Leaving group'))
+        line_bot_api.leave_group(event.source.group_id)
+    elif isinstance(event.source, SourceRoom):
+        line_bot_api.reply_message(event.reply_token,
+                                   messages=TextSendMessage('Leaving room'))
+        line_bot_api.leave_group(event.source.room_id)
+    else:
+        line_bot_api.reply_message(event.reply_token,
+                                   messages=TextSendMessage("Bot can't leave from 1:1 chat"))
+
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    if event.postback.data == 'leave':
+        postback_leave(event)
 
 
 # ====================================
@@ -204,6 +238,20 @@ def today_news(event):
 # ====================================
 # Echo
 # ====================================
+def _leave(event):
+    confirm_template_message = TemplateSendMessage(
+        alt_text='確認画面(このメッセージが表示されている端末ではこの機能は無効です)',
+        template=ConfirmTemplate(
+            text='Are you sure?',
+            actions=[
+                PostbackTemplateAction(label='Yes', text='Yes', data='leave'),
+                MessageTemplateAction(label='No', text='No')
+            ]
+        )
+    )
+    line_bot_api.reply_message(event.reply_token, messages=confirm_template_message)
+
+
 def echo(event):
     msg = event.message.text
     prefix = '@bot '
@@ -212,20 +260,9 @@ def echo(event):
     msg = msg[len(prefix):]
 
     if msg.startswith('ping'):
-        line_bot_api.reply_message(event.reply_token,
-                                   messages=TextSendMessage('pong'))
-    elif re.match('出て行け|出てけ|[kK]ick|[Bb]ye', msg):
-        if isinstance(event.source, SourceGroup):
-            line_bot_api.reply_message(event.reply_token,
-                                       messages=TextSendMessage('Leaving group'))
-            line_bot_api.leave_group(event.source.group_id)
-        elif isinstance(event.source, SourceRoom):
-            line_bot_api.reply_message(event.reply_token,
-                                       messages=TextSendMessage('Leaving room'))
-            line_bot_api.leave_group(event.source.room_id)
-        else:
-            line_bot_api.reply_message(event.reply_token,
-                                       messages=TextSendMessage("Bot can't leave from 1:1 chat"))
+        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage('pong'))
+    elif re.match('[Bb]ye', msg):
+        _leave(event)
     elif msg.startswith('Hey'):
         profile = line_bot_api.get_profile(event.source.user_id)
         msg = 'Hey {}!'.format(profile.display_name)
@@ -233,7 +270,7 @@ def echo(event):
     elif re.match('help|ヘルプ', msg):
         line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(HELP_TEXT))
     else:
-        msg = "Sorry, I don't understand your command :("
+        msg = "Sorry, I don't understand your command :(\nPlease input '@bot help'"
         line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
 
 
