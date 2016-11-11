@@ -23,30 +23,18 @@ line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
 handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
 
 HELP_TEXT = """\
+Reply:
+  ping: @bot ping
+  bye: @bot bye
+  hey: @bot hey
+
 Commands:
-- @bot
-  ex) @bot ping -> pong
-      @bot bye -> leaveing group
-      @bot Hey -> Hey {YOUR NAME}
-
-- greeting
-  ex) おはよう -> おはよー
-      おやすみ -> おやすみー
-
-- choice
-  ex) choice A B -> B
-
-- shuffle
-  ex) shuffle A B -> B A
-
-- おみくじ
-  ex) おみくじ -> 凶
-
-- weather
-  ex) weather -> 今日の天気は...
-
-- news
-  ex) news -> Display the list of news.
+  greeting: おはよう, いってきます、おやすみ
+  choice: choice A B
+  shuffle: shuffle A B
+  omikuji: おみくじ or 今日の運勢
+  weather: weather or 天気
+  news| news or ニュース
 """
 
 
@@ -177,7 +165,7 @@ def shuffle(event):
 
 def omikuji(event):
     msg = event.message.text
-    if not re.match('^おみくじ$', msg):
+    if not re.match('おみくじ|今日の運勢', msg):
         return
     fortunes = ['大吉', '中吉', '吉', '末吉', '凶', '大凶']
     line_bot_api.reply_message(event.reply_token,
@@ -263,7 +251,7 @@ def echo(event):
         line_bot_api.reply_message(event.reply_token, messages=TextSendMessage('pong'))
     elif re.match('[Bb]ye', msg):
         _leave(event)
-    elif msg.startswith('Hey'):
+    elif re.match('[hH]ey.*', msg):
         profile = line_bot_api.get_profile(event.source.user_id)
         msg = 'Hey {}!'.format(profile.display_name)
         line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
