@@ -34,8 +34,10 @@ Commands:
   choice A B
   shuffle A B
   おみくじ or 今日の運勢
-  weather or 天気
-  news or ニュース
+  weather
+  news
+  突然の死
+  突然の死 カレーメシ
 """[1:-1]
 
 
