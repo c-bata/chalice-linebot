@@ -18,6 +18,7 @@ from linebot.models import (
 )
 import requests
 from unicodedata import east_asian_width
+import wikipedia
 
 app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
@@ -38,6 +39,7 @@ Commands:
   news
   突然の死
   突然の死 カレーメシ
+  wiki 単語
 """[1:-1]
 
 
@@ -298,9 +300,34 @@ def sudden_death(event):
 
 
 # ====================================
+# Wikipedia
+# ====================================
+def wikipedia_page(event):
+    """Wikipediaで検索した結果を返す"""
+    msg = event.message.text
+    if not msg.startswith('wiki'):
+        return
+
+    query = msg[len('wiki '):]
+    wikipedia.set_lang('ja')
+
+    results = wikipedia.search(query)
+
+    # get first result
+    if results:
+        page = wikipedia.page(results[0])
+        msg = page.title + "\n" + page.url
+        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
+    else:
+        msg = '`{}` に該当するページはありません'.format(query)
+        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
+
+
+# ====================================
 # Message Event, TextMessage
 # ====================================
-plugins = [greet, weather, choice, shuffle, omikuji, today_news, echo, sudden_death]
+plugins = [greet, weather, choice, shuffle, omikuji, today_news, echo, sudden_death,
+           wikipedia_page]
 
 
 @handler.add(MessageEvent, message=TextMessage)

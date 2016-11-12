@@ -3,3 +3,4 @@ chalice
 feedparser
 line-bot-sdk
 requests
+wikipedia
