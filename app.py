@@ -17,6 +17,7 @@ from linebot.models import (
     SourceGroup, SourceRoom,
 )
 import requests
+from unicodedata import east_asian_width
 
 app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
@@ -263,9 +264,41 @@ def echo(event):
 
 
 # ====================================
+# Sudden death
+# ====================================
+def _message_length(message):
+    """ メッセージの長さを返す """
+    length = 0
+    for char in message:
+        width = east_asian_width(char)
+        if width in ('W', 'F', 'A'):
+            length += 2
+        elif width in ('Na', 'H'):
+            length += 1
+    return length
+
+
+def sudden_death(event):
+    """ 突然の死のメッセージを返す """
+    msg = event.message.text
+    if not re.match('^突然の死.*', msg):
+        return
+
+    word = msg[len('突然の死'):].lstrip().rstrip()
+    word = word if word else '突然の死'
+    length = _message_length(word)
+    header = '＿' + '人' * (length // 2 + 2) + '＿'
+    footer = '￣' + 'Y^' * (length // 2) + 'Y￣'
+    middle = "＞　" + word + "　＜"
+
+    msg = "\n".join([header, middle, footer])
+    line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
+
+
+# ====================================
 # Message Event, TextMessage
 # ====================================
-plugins = [greet, weather, choice, shuffle, omikuji, today_news, echo]
+plugins = [greet, weather, choice, shuffle, omikuji, today_news, echo, sudden_death]
 
 
 @handler.add(MessageEvent, message=TextMessage)
