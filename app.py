@@ -22,20 +22,20 @@ app = Chalice(app_name='linebot')
 line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
 handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
 
-HELP_TEXT = """\
+HELP_TEXT = """
 Reply:
   @bot ping
   @bot bye
   @bot hey
 
 Commands:
-  おはよう, いってきます、など
+  おはよう, 眠い...
   choice A B
   shuffle A B
   おみくじ or 今日の運勢
   weather or 天気
   news or ニュース
-"""
+"""[1:-1]
 
 
 @app.route('/')
