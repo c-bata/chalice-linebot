@@ -25,21 +25,21 @@ line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
 handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
 
 HELP_TEXT = """
+Commands:
+  おはよう, 眠い...
+  おみくじ or 今日の運勢
+  choice A B
+  die
+  die カレーメシ
+  news
+  shuffle A B
+  weather
+  wiki 単語
+
 Reply:
   @bot ping
   @bot bye
   @bot hey
-
-Commands:
-  おはよう, 眠い...
-  choice A B
-  shuffle A B
-  おみくじ or 今日の運勢
-  weather
-  news
-  突然の死
-  突然の死 カレーメシ
-  wiki 単語
 """[1:-1]
 
 
@@ -285,10 +285,10 @@ def _message_length(message):
 def sudden_death(event):
     """ 突然の死のメッセージを返す """
     msg = event.message.text
-    if not re.match('^突然の死.*', msg):
+    if not re.match('^die.*', msg):
         return
 
-    word = msg[len('突然の死'):].lstrip().rstrip()
+    word = msg[len('die'):].lstrip().rstrip()
     word = word if word else '突然の死'
     length = _message_length(word)
     header = '＿' + '人' * (length // 2 + 2) + '＿'
