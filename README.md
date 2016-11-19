@@ -52,10 +52,13 @@ $ cat .chalice/config.json
 }
 ```
 
-Set `CHANNEL_ACCESS_SECRET` and `CHANNEL_ACCESS_TOKEN` :
+#### Environment Variables
 
-```console
-$ vim app.py  # and setting your channel secret and channel access token.
+Set environment variables on your AWS console.
+
+```bash
+export LINE_BOT_CHANNEL_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export LINE_BOT_CHANNEL_ACCESS_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 #### Deploy to AWS Lambda and API Gateway
