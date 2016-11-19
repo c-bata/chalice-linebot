@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import os
 import re
 import random
 
@@ -21,8 +22,9 @@ from unicodedata import east_asian_width
 import wikipedia
 
 app = Chalice(app_name='linebot')
-line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
-handler = WebhookHandler('YOUR_CHANNEL_ACCESS_SECRET')
+
+line_bot_api = LineBotApi(os.environ['LINE_BOT_CHANNEL_ACCESS_TOKEN'])
+handler = WebhookHandler(os.environ['LINE_BOT_CHANNEL_ACCESS_SECRET'])
 
 HELP_TEXT = """
 Commands:
