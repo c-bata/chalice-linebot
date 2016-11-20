@@ -1,43 +1,16 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-import app
+import chalicelib
 from unittest import TestCase
 
 
-class GreetTests(TestCase):
-    def test_sleeping_greet(self):
-        actual = app._greet('眠たい').text
-        expected = ['おやすみー', 'おやすみなさい']
-        self.assertIn(actual, expected)
-
-
-class EchoTests(TestCase):
-    def test_echo_hello(self):
-        actual = app._echo('@bot Hello').text
-        expected = 'Hello'
-        self.assertEqual(actual, expected)
-
-
-class ChoiceTests(TestCase):
-    def test_choice_when_items_separated_by_space(self):
-        actual = app._choice('choice a b').text
-        expected = ['a', 'b']
-        self.assertIn(actual, expected)
-
-    def test_choice_when_items_separated_by_space_with_UpperCharacter(self):
-        actual = app._choice('Choice a b').text
-        expected = ['a', 'b']
-        self.assertIn(actual, expected)
-
-
-class ShuffleTests(TestCase):
-    def test_shuffle_when_items_separated_by_space(self):
-        actual = app._shuffle('shuffle a b').text
-        expected = ['a\nb', 'b\na']
-        self.assertIn(actual, expected)
-
-    def test_shuffle_when_items_separated_by_space_with_UpperCharacter(self):
-        actual = app._shuffle('Shuffle a b').text
-        expected = ['a\nb', 'b\na']
+class SuddenDeathTests(TestCase):
+    def test_sudden_death(self):
+        actual = chalicelib.sudden_death('突然の死')
+        expected = """
+＿人人人人人人＿
+＞  突然の死  ＜
+￣Y^Y^Y^Y^Y￣
+"""[1:-1]
         self.assertIn(actual, expected)

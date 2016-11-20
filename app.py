@@ -8,7 +8,6 @@ import random
 
 from bs4 import BeautifulSoup
 from chalice import Chalice
-import feedparser
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import (
     MessageEvent, JoinEvent, PostbackEvent,
@@ -17,9 +16,8 @@ from linebot.models import (
     URITemplateAction, PostbackTemplateAction, MessageTemplateAction,
     SourceGroup, SourceRoom,
 )
-import requests
-from unicodedata import east_asian_width
-import wikipedia
+
+import chalicelib
 
 app = Chalice(app_name='linebot')
 
@@ -100,34 +98,11 @@ def handle_postback(event):
 # ====================================
 # Weather
 # ====================================
-def _get_forecast_text(forecast):
-    """
-    天気予報の情報をテキストに変換する
-    """
-    date = forecast['dateLabel']
-    telop = forecast['telop']
-    temp = forecast['temperature']
-
-    text = '{} は {}'.format(date, telop)
-    if temp['min']:
-        text += ' 最低気温{}℃'.format(temp['min']['celsius'])
-    if temp['max']:
-        text += ' 最高気温{}℃'.format(temp['max']['celsius'])
-    return text
-
-
 def weather(event):
     msg = event.message.text
     if not msg.startswith('weather'):
         return
-
-    weather_url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city={}'
-    city_code = 280010  # 神戸
-    data = requests.get(weather_url.format(city_code)).json()
-
-    text = '神戸の天気\n'
-    text += _get_forecast_text(data['forecasts'][0]) + '\n'
-    text += _get_forecast_text(data['forecasts'][1])
+    text = chalicelib.livedoor_forecast()
     line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(text))
 
 
@@ -182,13 +157,6 @@ def omikuji(event):
 # ====================================
 # NEWS
 # ====================================
-def _fetch_news():
-    # RSS Feed of yahoo news doesn't contain thumbnail image.
-    url = 'https://news.google.com/news?hl=ja&ned=us&ie=UTF-8&oe=UTF-8&topic=po&output=rss'
-    parsed = feedparser.parse(url)
-    return parsed.entries
-
-
 def _get_carousel_column_from_google_news_entry(entry):
     summary_soup = BeautifulSoup(entry.summary, "html.parser")
     # summary has img tag which has no src attribute like:
@@ -218,7 +186,8 @@ def today_news(event):
     if not msg.startswith('news'):
         return
 
-    columns = [_get_carousel_column_from_google_news_entry(entry) for entry in _fetch_news()]
+    columns = [_get_carousel_column_from_google_news_entry(entry)
+               for entry in chalicelib.google_news()]
     # Carousel template is accepted until 5 columns.
     # See https://devdocs.line.me/ja/#template-message
     columns = [c for c in columns if c is not None][:5]
@@ -272,18 +241,6 @@ def echo(event):
 # ====================================
 # Sudden death
 # ====================================
-def _message_length(message):
-    """ メッセージの長さを返す """
-    length = 0
-    for char in message:
-        width = east_asian_width(char)
-        if width in ('W', 'F', 'A'):
-            length += 2
-        elif width in ('Na', 'H'):
-            length += 1
-    return length
-
-
 def sudden_death(event):
     """ 突然の死のメッセージを返す """
     msg = event.message.text
@@ -292,44 +249,29 @@ def sudden_death(event):
 
     word = msg[len('die'):].lstrip().rstrip()
     word = word if word else '突然の死'
-    length = _message_length(word)
-    header = '＿' + '人' * (length // 2 + 2) + '＿'
-    footer = '￣' + 'Y^' * (length // 2) + 'Y￣'
-    middle = "＞　" + word + "　＜"
-
-    msg = "\n".join([header, middle, footer])
-    line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
+    message = TextSendMessage(chalicelib.sudden_death(word))
+    line_bot_api.reply_message(event.reply_token, messages=message)
 
 
 # ====================================
 # Wikipedia
 # ====================================
-def wikipedia_page(event):
+def wikipedia(event):
     """Wikipediaで検索した結果を返す"""
     msg = event.message.text
     if not msg.startswith('wiki'):
         return
 
-    query = msg[len('wiki '):]
-    wikipedia.set_lang('ja')
-
-    results = wikipedia.search(query)
-
-    # get first result
-    if results:
-        page = wikipedia.page(results[0])
-        msg = page.title + "\n" + page.url
-        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
-    else:
-        msg = '`{}` に該当するページはありません'.format(query)
-        line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(msg))
+    word = msg[len('wiki '):]
+    result = chalicelib.wikipedia_search(word)
+    line_bot_api.reply_message(event.reply_token, messages=TextSendMessage(result))
 
 
 # ====================================
 # Message Event, TextMessage
 # ====================================
 plugins = [greet, weather, choice, shuffle, omikuji, today_news, echo, sudden_death,
-           wikipedia_page]
+           wikipedia]
 
 
 @handler.add(MessageEvent, message=TextMessage)
