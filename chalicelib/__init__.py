@@ -6,6 +6,7 @@ from chalice import Chalice
 from linebot import LineBotApi, WebhookHandler
 
 app = Chalice(app_name='linebot')
+app.debug = True
 
 line_bot_api = LineBotApi(os.environ['LINE_BOT_CHANNEL_ACCESS_TOKEN'])
 handler = WebhookHandler(os.environ['LINE_BOT_CHANNEL_ACCESS_SECRET'])
