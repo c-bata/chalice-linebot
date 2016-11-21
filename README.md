@@ -54,33 +54,40 @@ Success! :tada:
 
 ## Development
 
-#### Requirements
-
-Because of AWS Lambda's restrictions, Supported python version is 2.7 only.
-
-- beautifulsoup4
-- chalice
-- line-bot-sdk
-- feedparser
-
-#### Setup environment
+Chalice-Bot depends a Pillow.
+So If you want to create deploy package, you must it in Amazon Linux.
+However, it is very inconvenient to create an instance of EC2 for that.
+So please use `Dockerfile.deploy`.
 
 ```console
-$ virtualenv -p python2.7 venv
-$ source venv/bin/activate
-$ pip install -r requirements.txt -r requirements-dev.txt -c constraints.txt
+$ make help
+Commands:
+    deploy               Deploy to AWS Lambda and API Gateway
+    functions            Show the list of AWS Lambda functions
+    buckets              Show the files in S3 Bucket
+    lint                 Check coding styles
+    test                 Run tests
+    help                 Show help text
 ```
 
-#### Running tests
+#### How to deploy
 
-```console
-$ python -m unittest tests
+Set environment variables:
+
+```sh
+export AWS_ACCESS_KEY_ID=xxxxxxxxxxxxxxxxxxxx
+export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export AWS_DEFAULT_REGION=ap-northeast-1
+export S3_BUCKET_NAME=xxxxxxxxxxx
+
+export LINE_BOT_CHANNEL_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export LINE_BOT_CHANNEL_ACCESS_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-#### Coding styles
+After that:
 
 ```console
-$ flake8 --ignore=E501 app.py chalicelib/
+$ make deploy
 ```
 
 ## LICENSE

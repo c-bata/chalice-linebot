@@ -3,5 +3,6 @@ boto3
 chalice
 feedparser
 line-bot-sdk
+pillow
 requests
 wikipedia
