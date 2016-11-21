@@ -13,7 +13,13 @@ LINE BOT on AWS Lambda + API Gateway using Chalice.
 | News      | ![news](./resources/news.png)         |
 | Echo      | ![echo](./resources/echo.png)         |
 
-## How to run
+
+## Developing
+
+Chalice-Bot depends a Pillow - Python Imaging Library.
+So If you want to create deploy package for AWS Lambda, you must prepare the Amazon Linux.
+However, it is very inconvenient to create an instance of EC2 for that.
+So please use `Dockerfile.deploy`.
 
 #### Setup
 
@@ -27,13 +33,16 @@ $ cat .chalice/config.json
 }
 ```
 
-#### Environment Variables
+#### Environment Variables on your local machine
 
-Set environment variables on your AWS console.
+```sh
+export AWS_ACCESS_KEY_ID=xxxxxxxxxxxxxxxxxxxx
+export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export AWS_DEFAULT_REGION=ap-northeast-1
+export S3_BUCKET_NAME=xxxxxxxxxxx
 
-```bash
-export LINE_BOT_CHANNEL_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-export LINE_BOT_CHANNEL_ACCESS_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export LINE_BOT_CHANNEL_ACCESS_TOKEN=
+export LINE_BOT_CHANNEL_ACCESS_SECRET=
 ```
 
 #### Deploy to AWS Lambda and API Gateway
@@ -41,7 +50,16 @@ export LINE_BOT_CHANNEL_ACCESS_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Deploying by chalice cli:
 
 ```console
-$ chalice deploy
+$ make deploy
+```
+
+#### Environment variables on your AWS Console
+
+Set environment variables on your AWS console.
+
+```bash
+export LINE_BOT_CHANNEL_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+export LINE_BOT_CHANNEL_ACCESS_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 #### Configuration on LINE DEVELOPERS
@@ -52,12 +70,10 @@ Open your line bot setting's page and Set WebHook url.
 
 Success! :tada:
 
-## Development
 
-Chalice-Bot depends a Pillow.
-So If you want to create deploy package, you must it in Amazon Linux.
-However, it is very inconvenient to create an instance of EC2 for that.
-So please use `Dockerfile.deploy`.
+#### Others
+
+Other commands for developing are written in Makefile:
 
 ```console
 $ make help
@@ -68,26 +84,6 @@ Commands:
     test                 Run tests
     functions            Show the list of AWS Lambda functions
     help                 Show help text
-```
-
-#### How to deploy
-
-Set environment variables:
-
-```sh
-export AWS_ACCESS_KEY_ID=xxxxxxxxxxxxxxxxxxxx
-export AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-export AWS_DEFAULT_REGION=ap-northeast-1
-export S3_BUCKET_NAME=xxxxxxxxxxx
-
-export LINE_BOT_CHANNEL_ACCESS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-export LINE_BOT_CHANNEL_ACCESS_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-After that:
-
-```console
-$ make deploy
 ```
 
 ## LICENSE
