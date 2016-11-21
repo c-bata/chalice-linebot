@@ -62,11 +62,11 @@ So please use `Dockerfile.deploy`.
 ```console
 $ make help
 Commands:
+    build                Build docker container
     deploy               Deploy to AWS Lambda and API Gateway
-    functions            Show the list of AWS Lambda functions
-    buckets              Show the files in S3 Bucket
     lint                 Check coding styles
     test                 Run tests
+    functions            Show the list of AWS Lambda functions
     help                 Show help text
 ```
 
