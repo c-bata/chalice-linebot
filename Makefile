@@ -17,13 +17,13 @@ deploy: ## Deploy to AWS Lambda and API Gateway
 		c-bata/lambda_deploy chalice deploy
 
 lint: ## Check coding styles
-	flake8 --ignore=E501 app.py chalicelib/
+	@flake8 --ignore=E501 app.py chalicelib/
 
 test: ## Run tests
-	python -m unittest tests
+	@python -m unittest tests
 
 functions: ## Show the list of AWS Lambda functions
-	aws lambda list-functions | jq '.Functions | .[] | .FunctionName'
+	@aws lambda list-functions | jq '.Functions | .[] | .FunctionName'
 
 help: ## Show help text
 	@echo "Commands:"
