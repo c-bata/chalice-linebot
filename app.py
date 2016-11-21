@@ -6,9 +6,11 @@ from chalicelib import (
     app, line_bot_api, handler
 )
 
-from chalicelib import postback_events
-from chalicelib import text_message_events
-from linebot.models import MessageEvent, JoinEvent, PostbackEvent, TextMessage, TextSendMessage
+from chalicelib import postback_events, text_message_events, aws_utils
+from linebot.models import (
+    MessageEvent, JoinEvent, PostbackEvent, TextMessage, TextSendMessage,
+    ImageMessage
+)
 
 
 @app.route('/')
@@ -63,6 +65,21 @@ plugins = [
     text_message_events.sudden_death,
     text_message_events.wikipedia,
 ]
+
+
+# ====================================
+# Other Message Type
+# ====================================
+@handler.add(MessageEvent, message=ImageMessage)
+def handle_content_message(event):
+    message_content = line_bot_api.get_message_content(event.message.id)
+    image_url = aws_utils.upload_to_s3(message_content)
+
+    line_bot_api.reply_message(
+        event.reply_token, [
+            TextSendMessage(text='Save content.'),
+            TextSendMessage(text=image_url)
+        ])
 
 
 @handler.add(MessageEvent, message=TextMessage)

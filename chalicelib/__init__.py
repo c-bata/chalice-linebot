@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import boto3
 import os
 from chalice import Chalice
 from linebot import LineBotApi, WebhookHandler
@@ -8,9 +9,11 @@ from linebot import LineBotApi, WebhookHandler
 app = Chalice(app_name='linebot')
 app.debug = True
 
-line_bot_api = LineBotApi(os.environ['LINE_BOT_CHANNEL_ACCESS_TOKEN'])
-handler = WebhookHandler(os.environ['LINE_BOT_CHANNEL_ACCESS_SECRET'])
+line_bot_api = LineBotApi(os.getenv('LINE_BOT_CHANNEL_ACCESS_TOKEN'))
+handler = WebhookHandler(os.getenv('LINE_BOT_CHANNEL_ACCESS_SECRET'))
 
+s3_client = boto3.client('s3')
+bucket_name = os.getenv('S3_BUCKET_NAME')
 
 HELP_TEXT = """
 Commands:
