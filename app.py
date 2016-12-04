@@ -8,8 +8,8 @@ from chalicelib import (
 
 from chalicelib import postback_events, text_message_events, aws_utils
 from linebot.models import (
-    MessageEvent, JoinEvent, PostbackEvent, TextMessage, TextSendMessage,
-    ImageMessage
+    MessageEvent, JoinEvent, PostbackEvent, BeaconEvent,
+    TextMessage, TextSendMessage, ImageMessage
 )
 
 
@@ -49,6 +49,16 @@ def handle_join(event):
 def handle_postback(event):
     if event.postback.data == 'leave':
         postback_events.postback_leave(event)
+
+
+# ====================================
+# Beacon
+# ====================================
+@handler.add(BeaconEvent)
+def handle_beacon(event):
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text='Got beacon event. hwid=' + event.beacon.hwid))
 
 
 # ====================================
